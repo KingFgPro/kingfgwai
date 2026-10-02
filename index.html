@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>模拟某团外卖 · 假外卖商店</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        body { background-color: #f5f5f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 0; margin: 0; }
+
+        .app {
+            width: 100%;
+            max-width: 1200px;
+            background: #ffffff;
+            height: 100vh;
+            max-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .header { padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; background: #ffffff; border-bottom: 1px solid #f5f5f5; flex-shrink: 0; transition: background 0.3s, border-color 0.3s; }
+        .logo-area { display: flex; align-items: center; gap: 6px; }
+        .logo-icon { background: #ffc300; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; color: #222; box-shadow: 0 2px 6px rgba(255,195,0,0.3); }
+        .logo-text { font-size: 17px; font-weight: 700; color: #222; transition: color 0.3s; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .user-name { font-size: 13px; background: #f2f2f2; padding: 6px 14px; border-radius: 30px; color: #444; font-weight: 500; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: background 0.3s, color 0.3s; }
+        .user-name.not-logged { background: #ffc300; color: #222; font-weight: 700; }
+
+        .scroll-area { flex: 1; overflow-y: auto; padding: 8px 14px 16px; background: #fafafa; scroll-behavior: smooth; min-height: 0; transition: background 0.3s; }
+
+        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+        .shop-card { background: #ffffff; border-radius: 14px; border: 1px solid #f1f1f1; box-shadow: 0 3px 10px rgba(0,0,0,0.02); transition: box-shadow 0.2s, border-color 0.2s, transform 0.1s, background 0.3s; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; }
+        .shop-card:hover { border-color: #e0e0e0; box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
+        .shop-cover { background: #fef2e0; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 36px; position: relative; transition: background 0.3s; }
+        .shop-cover .shop-badge { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.5); color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 20px; backdrop-filter: blur(4px); }
+        .shop-body { padding: 8px 10px 10px; flex: 1; display: flex; flex-direction: column; gap: 3px; }
+        .shop-name { font-weight: 700; font-size: 13px; color: #1f1f1f; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; transition: color 0.3s; }
+        .shop-meta { font-size: 10px; color: #888; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; transition: color 0.3s; }
+        .rating { color: #ffb800; font-weight: 600; }
+        .shop-tags { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
+        .tag { background: #f5f5f5; padding: 2px 6px; border-radius: 20px; font-size: 9px; color: #666; white-space: nowrap; transition: background 0.3s, color 0.3s; }
+        .shop-price { margin-top: 4px; font-size: 11px; color: #ff4d00; font-weight: 600; }
+
+        .shop-detail { display: none; flex-direction: column; height: 100%; }
+        .shop-detail.active { display: flex; }
+        .detail-header { display: flex; align-items: center; padding: 10px 16px; background: #ffffff; border-bottom: 1px solid #f0f0f0; gap: 12px; flex-shrink: 0; transition: background 0.3s, border-color 0.3s; }
+        .back-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 4px 8px; border-radius: 50%; transition: background 0.2s, color 0.3s; line-height: 1; color: #333; }
+        .back-btn:hover { background: #f0f0f0; }
+        .detail-shop-name { font-weight: 700; font-size: 16px; color: #222; flex: 1; transition: color 0.3s; }
+        .detail-rating { font-size: 13px; color: #ffb800; font-weight: 600; }
+
+        .detail-menu { padding: 8px 16px 16px; overflow-y: auto; flex: 1; background: #fafafa; min-height: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0 16px; align-content: start; transition: background 0.3s; }
+        .detail-dish-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; transition: background 0.15s, border-color 0.3s; border-radius: 8px; }
+        .detail-dish-item.selected { background: #fff8e6; margin: 0 -8px; padding: 12px 8px; border-radius: 10px; }
+        .detail-dish-info { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+        .detail-dish-name { font-size: 14px; font-weight: 600; color: #222; transition: color 0.3s; }
+        .detail-dish-desc { font-size: 11px; color: #999; transition: color 0.3s; }
+        .detail-dish-price { font-weight: 700; color: #ff4d00; font-size: 15px; margin-right: 10px; white-space: nowrap; }
+
+        .qty-control { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
+        .qty-btn {
+            width: 30px; height: 30px; border-radius: 50%;
+            border: none; font-size: 18px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: background 0.2s, transform 0.1s;
+            line-height: 1; padding: 0;
+        }
+        .qty-btn.minus { background: #f2f2f2; color: #666; }
+        .qty-btn.minus:hover { background: #e6e6e6; }
+        .qty-btn.plus { background: #ffc300; color: #222; box-shadow: 0 2px 6px rgba(255,195,0,0.3); }
+        .qty-btn.plus:hover { background: #e6b000; }
+        .qty-btn:active { transform: scale(0.9); }
+        .qty-btn:disabled { opacity: 0.3; cursor: not-allowed; box-shadow: none; }
+        .qty-number {
+            min-width: 32px; text-align: center; font-size: 15px; font-weight: 700;
+            color: #222; transition: color 0.3s;
+        }
+        .dark-mode .qty-number { color: #f0f0f0; }
+        .dark-mode .qty-btn.minus { background: #2a2a2a; color: #aaa; }
+        .dark-mode .qty-btn.minus:hover { background: #3a3a3a; }
+
+        .detail-bottom-bar { background: #ffffff; border-top: 1px solid #f0f0f0; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; transition: background 0.3s, border-color 0.3s; }
+        .detail-bottom-total { font-size: 14px; color: #555; transition: color 0.3s; }
+        .detail-bottom-total .price { font-size: 20px; font-weight: 700; color: #ff4d00; margin-left: 4px; }
+        .detail-bottom-actions { display: flex; gap: 8px; }
+        .detail-bottom-actions .btn-secondary { padding: 10px 14px; font-size: 13px; }
+        .detail-bottom-actions .btn-primary { padding: 10px 20px; font-size: 14px; }
+        .detail-bottom-actions .btn-cart { background: #2b9939; color: white; padding: 10px 16px; font-size: 13px; border-radius: 60px; font-weight: 700; border: none; cursor: pointer; }
+        .detail-bottom-actions .btn-cart:hover { background: #1e7a2a; }
+
+        .footer-bar { background: #ffffff; border-top: 1px solid #f0f0f0; padding: 8px 18px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #555; flex-shrink: 0; transition: background 0.3s, border-color 0.3s, color 0.3s; }
+        .footer-left { display: flex; align-items: center; gap: 10px; }
+        .footer-btn { background: #f5f5f5; border: none; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: background 0.2s, color 0.3s; position: relative; color: #333; }
+        .footer-btn:hover { background: #eaeaea; }
+        .footer-badge { position: absolute; top: -4px; right: -4px; background: #ff4d00; color: white; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 4px; border: 1.5px solid #ffffff; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s; backdrop-filter: blur(2px); }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-content { background: #ffffff; width: 85%; max-width: 440px; border-radius: 24px; padding: 20px 18px 18px; box-shadow: 0 30px 50px rgba(0,0,0,0.2); transform: scale(0.95); transition: transform 0.2s, background 0.3s, color 0.3s; max-height: 88vh; overflow-y: auto; }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .modal-title { font-size: 19px; font-weight: 700; margin-bottom: 16px; text-align: center; color: #222; transition: color 0.3s; }
+        .modal-sub { font-size: 14px; color: #666; text-align: center; margin-bottom: 20px; transition: color 0.3s; }
+        .input-label { font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px; display: block; transition: color 0.3s; }
+        .modal-input { width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0; border-radius: 12px; font-size: 15px; transition: border-color 0.2s, background 0.3s, color 0.3s; outline: none; background: #ffffff; color: #222; }
+        .modal-input:focus { border-color: #ffc300; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { flex: 1; padding: 12px 0; border-radius: 60px; font-weight: 700; font-size: 15px; border: none; cursor: pointer; transition: background 0.2s, transform 0.1s; text-align: center; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: #ffc300; color: #222; box-shadow: 0 4px 12px rgba(255,195,0,0.4); }
+        .btn-primary:hover { background: #e6b000; }
+        .btn-secondary { background: #f2f2f2; color: #444; transition: background 0.3s, color 0.3s; }
+        .btn-secondary:hover { background: #e6e6e6; }
+        .btn-wechat { background: #2b9939; color: white; }
+        .btn-alipay { background: #1677ff; color: white; }
+        .btn-refund { background: #ff4d00; color: white; }
+        .btn-refund:hover { background: #d93e00; }
+        .btn-link { background: none; border: none; color: #1677ff; font-size: 13px; cursor: pointer; text-decoration: underline; padding: 4px; }
+
+        .account-options { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+        .account-option {
+            display: flex; align-items: center; gap: 14px;
+            padding: 18px 16px; border-radius: 16px;
+            border: 2px solid #f0f0f0; background: #fff;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .account-option:hover { border-color: #ffc300; background: #fff8e6; }
+        .account-option .icon { font-size: 30px; }
+        .account-option .text { flex: 1; text-align: left; }
+        .account-option .title { font-size: 16px; font-weight: 700; color: #222; margin-bottom: 2px; }
+        .account-option .desc { font-size: 12px; color: #999; }
+        .dark-mode .account-option { background: #2a2a2a; border-color: #3a3a3a; }
+        .dark-mode .account-option:hover { border-color: #ffc300; background: #2a2418; }
+        .dark-mode .account-option .title { color: #f0f0f0; }
+
+        .orientation-options { display: flex; gap: 10px; }
+        .orientation-option { flex: 1; padding: 14px 8px; border: 2px solid #e0e0e0; border-radius: 14px; text-align: center; cursor: pointer; transition: all 0.2s, background 0.3s; background: #ffffff; }
+        .orientation-option:hover { border-color: #ffc300; }
+        .orientation-option.active { border-color: #ffc300; background: #fff8e6; }
+        .orientation-option .icon { font-size: 26px; margin-bottom: 4px; display: block; }
+        .orientation-option .label { font-size: 12px; font-weight: 600; color: #444; transition: color 0.3s; }
+        .orientation-option.active .label { color: #e65100; }
+
+        .settings-section { margin-top: 18px; }
+        .settings-section-title { font-size: 12px; font-weight: 700; color: #888; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f5f5f5; transition: border-color 0.3s; }
+        .setting-row:last-child { border-bottom: none; }
+        .setting-row-label { font-size: 14px; color: #333; font-weight: 500; transition: color 0.3s; }
+        .setting-row-desc { font-size: 11px; color: #999; margin-top: 2px; transition: color 0.3s; }
+        .switch { position: relative; width: 48px; height: 26px; background: #ddd; border-radius: 13px; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+        .switch.on { background: #2b9939; }
+        .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .switch.on::after { transform: translateX(22px); }
+
+        .toast-message { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 40px; font-size: 14px; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 2000; font-weight: 500; }
+        .toast-message.show { opacity: 1; }
+        .password-hint { color: #ff4d00; font-size: 12px; margin-top: 4px; text-align: left; }
+        .error-hint { color: #ff4d00; font-size: 12px; margin-top: 4px; text-align: left; }
+        .success-hint { color: #2b9939; font-size: 12px; margin-top: 4px; text-align: left; }
+
+        .order-item { border-bottom: 1px solid #f0f0f0; padding: 14px 0; transition: border-color 0.3s; }
+        .order-shop { font-weight: 700; font-size: 14px; color: #222; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; transition: color 0.3s; }
+        .order-dishes { font-size: 12px; color: #888; margin-bottom: 8px; line-height: 1.5; transition: color 0.3s; }
+        .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .status-badge.pending { background: #fff3e0; color: #e65100; }
+        .status-badge.shipped { background: #e8f5e9; color: #2e7d32; }
+        .status-badge.delivered { background: #e3f2fd; color: #1565c0; }
+        .status-badge.refunded { background: #ffebee; color: #c62828; }
+        .empty-orders { text-align: center; color: #999; padding: 30px 0; font-size: 14px; }
+
+        .track-section { background: #f8f9fa; border-radius: 12px; padding: 12px; margin-top: 8px; border: 1px solid #f0f0f0; transition: background 0.3s, border-color 0.3s; }
+        .track-title { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 10px; transition: color 0.3s; }
+        .progress-track { display: flex; align-items: center; justify-content: space-between; position: relative; margin: 16px 0 8px; padding: 0 4px; }
+        .progress-track::before { content: ''; position: absolute; top: 14px; left: 20px; right: 20px; height: 3px; background: #e0e0e0; border-radius: 2px; z-index: 1; transition: background 0.3s; }
+        .progress-fill { position: absolute; top: 14px; left: 20px; height: 3px; background: #ffc300; border-radius: 2px; z-index: 2; transition: width 0.5s ease; }
+        .progress-step { display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 3; position: relative; flex: 1; }
+        .step-icon { width: 30px; height: 30px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #fff; transition: background 0.3s; border: 2px solid #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .step-icon.active { background: #ffc300; color: #222; }
+        .step-icon.done { background: #2b9939; color: #fff; }
+        .step-label { font-size: 10px; color: #888; text-align: center; font-weight: 500; white-space: nowrap; transition: color 0.3s; }
+        .step-label.active { color: #ffc300; font-weight: 700; }
+        .step-label.done { color: #2b9939; font-weight: 700; }
+        .track-status-text { font-size: 12px; color: #666; text-align: center; margin-top: 6px; line-height: 1.5; transition: color 0.3s; }
+        .track-time { font-size: 11px; color: #aaa; text-align: center; margin-top: 2px; transition: color 0.3s; }
+
+        .tip-options { display: flex; gap: 10px; margin-bottom: 16px; }
+        .tip-option { flex: 1; padding: 16px 10px; border: 2px solid #e0e0e0; border-radius: 14px; text-align: center; cursor: pointer; transition: all 0.2s, background 0.3s; background: #ffffff; }
+        .tip-option:hover { border-color: #ffc300; }
+        .tip-option.active { border-color: #ffc300; background: #fff8e6; }
+        .tip-option .icon { font-size: 28px; margin-bottom: 4px; display: block; }
+        .tip-option .label { font-size: 12px; font-weight: 600; color: #444; transition: color 0.3s; }
+
+        .cart-panel { background: #ffffff; border-top: 1px solid #f0f0f0; padding: 12px 16px; display: none; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto; flex-shrink: 0; transition: background 0.3s, border-color 0.3s; }
+        .cart-panel.active { display: flex; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 14px; transition: border-color 0.3s; }
+        .cart-item-name { font-weight: 500; color: #222; flex: 1; transition: color 0.3s; }
+        .cart-item-shop { font-size: 11px; color: #999; margin-left: 8px; transition: color 0.3s; }
+        .cart-item-price { font-weight: 700; color: #ff4d00; margin: 0 12px; }
+        .cart-item-remove { background: none; border: none; color: #ff4d00; font-size: 16px; cursor: pointer; padding: 0 4px; }
+        .cart-total { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #f0f0f0; font-size: 15px; font-weight: 700; transition: border-color 0.3s; color: #222; }
+        .cart-total-price { color: #ff4d00; font-size: 18px; }
+        .cart-actions { display: flex; gap: 10px; }
+        .cart-pay-btn { flex: 1; background: #ffc300; border: none; border-radius: 60px; padding: 12px 0; font-weight: 700; font-size: 15px; color: #222; cursor: pointer; transition: background 0.2s, transform 0.1s; text-align: center; }
+        .cart-clear-btn { background: #f2f2f2; border: none; border-radius: 60px; padding: 12px 20px; font-weight: 600; font-size: 14px; color: #666; cursor: pointer; transition: background 0.3s, color 0.3s; }
+        .empty-cart { text-align: center; color: #999; padding: 20px 0; font-size: 14px; }
+
+        /* ========== 深色主题 ========== */
+        .dark-mode { background: #121212; }
+        .dark-mode .app { background: #1a1a1a; }
+        .dark-mode .header { background: #1a1a1a; border-bottom-color: #2a2a2a; }
+        .dark-mode .logo-text { color: #f0f0f0; }
+        .dark-mode .user-name { background: #2a2a2a; color: #ddd; }
+        .dark-mode .user-name.not-logged { background: #ffc300; color: #222; }
+        .dark-mode .scroll-area { background: #121212; }
+        .dark-mode .shop-card { background: #1e1e1e; border-color: #2a2a2a; }
+        .dark-mode .shop-cover { background: #2a2418; }
+        .dark-mode .shop-name { color: #f0f0f0; }
+        .dark-mode .shop-meta { color: #888; }
+        .dark-mode .tag { background: #2a2a2a; color: #aaa; }
+        .dark-mode .detail-header { background: #1a1a1a; border-bottom-color: #2a2a2a; }
+        .dark-mode .detail-shop-name { color: #f0f0f0; }
+        .dark-mode .back-btn { color: #ddd; }
+        .dark-mode .detail-menu { background: #121212; }
+        .dark-mode .detail-dish-item { border-bottom-color: #2a2a2a; }
+        .dark-mode .detail-dish-item.selected { background: #2a2418; }
+        .dark-mode .detail-dish-name { color: #f0f0f0; }
+        .dark-mode .detail-dish-desc { color: #888; }
+        .dark-mode .detail-bottom-bar { background: #1a1a1a; border-top-color: #2a2a2a; }
+        .dark-mode .detail-bottom-total { color: #aaa; }
+        .dark-mode .footer-bar { background: #1a1a1a; border-top-color: #2a2a2a; color: #aaa; }
+        .dark-mode .footer-btn { background: #2a2a2a; color: #ddd; }
+        .dark-mode .modal-content { background: #1e1e1e; }
+        .dark-mode .modal-title { color: #f0f0f0; }
+        .dark-mode .modal-sub { color: #aaa; }
+        .dark-mode .input-label { color: #bbb; }
+        .dark-mode .modal-input { background: #2a2a2a; border-color: #3a3a3a; color: #f0f0f0; }
+        .dark-mode .btn-secondary { background: #2a2a2a; color: #ddd; }
+        .dark-mode .orientation-option { background: #2a2a2a; border-color: #3a3a3a; }
+        .dark-mode .orientation-option .label { color: #ddd; }
+        .dark-mode .orientation-option.active { background: #2a2418; border-color: #ffc300; }
+        .dark-mode .setting-row { border-bottom-color: #2a2a2a; }
+        .dark-mode .setting-row-label { color: #ddd; }
+        .dark-mode .setting-row-desc { color: #888; }
+        .dark-mode .settings-section-title { color: #666; }
+        .dark-mode .order-item { border-bottom-color: #2a2a2a; }
+        .dark-mode .order-shop { color: #f0f0f0; }
+        .dark-mode .order-dishes { color: #888; }
+        .dark-mode .empty-orders { color: #666; }
+        .dark-mode .track-section { background: #2a2a2a; border-color: #3a3a3a; }
+        .dark-mode .track-title { color: #bbb; }
+        .dark-mode .track-status-text { color: #aaa; }
+        .dark-mode .track-time { color: #777; }
+        .dark-mode .progress-track::before { background: #3a3a3a; }
+        .dark-mode .step-icon { border-color: #1e1e1e; }
+        .dark-mode .step-label { color: #777; }
+        .dark-mode .tip-option { background: #2a2a2a; border-color: #3a3a3a; }
+        .dark-mode .tip-option .label { color: #ddd; }
+        .dark-mode .tip-option.active { background: #2a2418; border-color: #ffc300; }
+        .dark-mode .cart-panel { background: #1a1a1a; border-top-color: #2a2a2a; }
+        .dark-mode .cart-item { border-bottom-color: #2a2a2a; }
+        .dark-mode .cart-item-name { color: #f0f0f0; }
+        .dark-mode .cart-item-shop { color: #888; }
+        .dark-mode .cart-total { border-top-color: #2a2a2a; color: #f0f0f0; }
+        .dark-mode .cart-clear-btn { background: #2a2a2a; color: #ddd; }
+        .dark-mode .empty-cart { color: #666; }
+
+        .large-font .shop-name { font-size: 15px; }
+        .large-font .detail-dish-name { font-size: 16px; }
+        .large-font .setting-row-label { font-size: 16px; }
+        .large-font .modal-title { font-size: 21px; }
+        .large-font .footer-btn { font-size: 15px; }
+    </style>
+</head>
+<body>
+<div class="app" id="app">
+    <!-- 头部 -->
+    <div class="header">
+        <div class="logo-area">
+            <div class="logo-icon">🍔</div>
+            <div class="logo-text">模拟某团外卖</div>
+        </div>
+        <div class="header-right">
+            <div class="user-name not-logged" id="userNameDisplay">登录/注册</div>
+        </div>
+    </div>
+
+    <!-- 主滚动区 -->
+    <div class="scroll-area" id="mainScrollArea">
+        <div class="shop-grid" id="shopGridContainer"></div>
+        <div class="shop-detail" id="shopDetailContainer"></div>
+    </div>
+
+    <!-- 购物车面板 -->
+    <div class="cart-panel" id="cartPanel"></div>
+
+    <!-- 底部固定栏 -->
+    <div class="footer-bar" id="footerBar">
+        <div class="footer-left">
+            <button class="footer-btn" id="ordersBtn">📋 订单<span class="footer-badge" id="ordersBadge" style="display:none;">0</span></button>
+            <button class="footer-btn" id="cartBtn">🛒 购物车<span class="footer-badge" id="cartBadge" style="display:none;">0</span></button>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="footer-btn" id="settingsBtn">⚙️ 设置</button>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-message" id="toast">操作成功</div>
+
+    <!-- 模态框 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- 全局状态 ----------
+        let user = { registered: false, username: '', wechatPassword: '', alipayPassword: '' };
+        let userDatabase = loadUserDatabase();
+        let orders = [];
+        let cart = [];
+        let currentShops = [];
+        let currentDetailShop = null;
+        let dishQuantities = new Map();
+        let orderUpdateInterval = null;
+
+        let prefs = {
+            darkMode: false,
+            largeFont: false,
+            notifications: true,
+            sound: true,
+            vibration: true,
+            showSales: true,
+            showRating: true,
+            reduceMotion: false,
+            highContrast: false,
+            dataSaver: false,
+            locationService: true,
+            personalizedRecommend: true,
+            orderReminder: true,
+            shareLocation: false
+        };
+
+        // ---------- localStorage 持久化 ----------
+        function loadUserDatabase() {
+            try {
+                const data = localStorage.getItem('mt_user_database');
+                if (data) return JSON.parse(data);
+            } catch (e) { console.warn('读取用户数据库失败', e); }
+            return {};
+        }
+        function saveUserDatabase() {
+            try {
+                localStorage.setItem('mt_user_database', JSON.stringify(userDatabase));
+            } catch (e) { console.warn('保存用户数据库失败', e); }
+        }
+
+        // ---------- 店铺池 ----------
+        const BASE_DISHES = ['脆皮炸鸡','香辣鸡腿堡','大薯条','奥尔良烤翅','可乐(大杯)','鸡米花','劲爆鸡排','芝士薯格','炸鸡全家桶','蜂蜜芥末鸡块','香辣鸡翅','玉米浓汤','韭菜猪肉饺','玉米鲜虾饺','凉拌黄瓜','酱牛肉','酸辣汤','白菜猪肉饺','三鲜水饺','牛肉水饺','素三鲜饺','酱猪蹄','拍黄瓜','小米粥','豚骨拉面','地狱辣拉面','煎饺(5只)','溏心蛋','叉烧饭','味噌拉面','酱油拉面','炸鸡块','海苔','玉米粒','叉烧(3片)','日式煎茶','珍珠奶茶','杨枝甘露','芝士葡萄','柠檬茶','芋泥波波','黑糖珍珠','草莓奶昔','芒果冰沙','抹茶拿铁','可可奶茶','椰果奶茶','布丁奶茶','经典冒菜','麻辣牛肉冒菜','冰粉','脑花','干碟','油碟','毛肚','黄喉','午餐肉','宽粉','豆皮','唯怡豆奶','鸡胸肉沙拉','牛油果沙拉','全麦三明治','南瓜浓汤','藜麦碗','考伯沙拉','凯撒沙拉','鸡胸肉卷','牛油果奶昔','果蔬汁','希腊酸奶','能量棒','酸菜猪肉饺','酱大骨','锅包肉','地三鲜','猪肉炖粉条','小鸡炖蘑菇','拔丝地瓜','酸菜白肉','大拉皮','粘豆包','玉米面粥','经典烤肉拌饭','辣白菜五花肉拌饭','海带汤','芝士年糕','烤牛肉拌饭','鸡肉拌饭','金枪鱼拌饭','泡菜汤','大酱汤','石锅拌饭','韩式炸酱面','经典黄焖鸡','黄焖排骨','黄焖猪蹄','加土豆','酸梅汤','黄焖牛肉','黄焖鸡腿','黄焖香菇','加金针菇','加豆皮','米饭','可乐','经典螺蛳粉','豪华螺蛳粉','干捞螺蛳粉','卤蛋','绿豆沙','螺蛳粉加鸭脚','螺蛳粉加猪脚','螺蛳粉加香肠','腐竹加量','酸笋加量','油果加量','豆奶','热干面','牛肉热干面','蛋酒','面窝','豆浆','牛杂热干面','虾仁热干面','炸酱热干面','糊米酒','豆腐脑','油条','绿豆汤','拌面','扁肉','炖罐','蒸饺','卤味拼盘','拌面加扁肉','炒粉','炒饭','瓦罐汤','花生汤'];
+        const SHOP_NAMES = ['疯狂炸鸡社','妈妈水饺','深夜食堂·拉面','奶茶自由','川香冒菜','轻食主义','东北饺子王','烤肉拌饭','黄焖鸡米饭','柳州螺蛳粉','武汉热干面','沙县小吃','沙县小吃二店','兰州拉面','重庆小面','麻辣香锅','石锅拌饭','日式寿司','韩式炸鸡','广式烧腊','湖南米粉','桂林米粉','过桥米线','生煎包','小笼包','灌汤包','兰州牛肉面','西安肉夹馍','成都冒菜','云南米线'];
+        const SHOP_EMOJIS = ['🍗','🥟','🍜','🧋','🌶️','🥗','🥟','🍚','🍗','🍜','🍝','🥟','🥟','🍜','🍝','🌶️','🍚','🍣','🍗','🍖','🍜','🍜','🍜','🥟','🥟','🥟','🍜','🥙','🌶️','🍜'];
+
+        const SHOP_POOL = SHOP_NAMES.map((name, idx) => {
+            const dishCount = 30 + Math.floor(Math.random() * 11);
+            const dishes = [];
+            const usedNames = new Set();
+            while (dishes.length < dishCount) {
+                const dishName = BASE_DISHES[Math.floor(Math.random() * BASE_DISHES.length)];
+                if (usedNames.has(dishName)) continue;
+                usedNames.add(dishName);
+                const price = 8 + Math.floor(Math.random() * 50);
+                const descOptions = ['招牌','推荐','热销','新品','经典','秘制','家常','特色'];
+                const desc = descOptions[Math.floor(Math.random() * descOptions.length)];
+                dishes.push({ name: dishName, price, desc });
+            }
+            return { name, emoji: SHOP_EMOJIS[idx % SHOP_EMOJIS.length], rating: (4.0 + Math.random() * 1.0).toFixed(1), tags: ['美食','推荐','热销'].slice(0, 2 + Math.floor(Math.random() * 2)), dishes };
+        });
+
+        // DOM
+        const app = document.getElementById('app');
+        const shopGridContainer = document.getElementById('shopGridContainer');
+        const shopDetailContainer = document.getElementById('shopDetailContainer');
+        const mainScrollArea = document.getElementById('mainScrollArea');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalContent = document.getElementById('modalContent');
+        const toastEl = document.getElementById('toast');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const footerBar = document.getElementById('footerBar');
+        const ordersBtn = document.getElementById('ordersBtn');
+        const ordersBadge = document.getElementById('ordersBadge');
+        const cartBtn = document.getElementById('cartBtn');
+        const cartBadge = document.getElementById('cartBadge');
+        const cartPanel = document.getElementById('cartPanel');
+
+        // ---------- 工具 ----------
+        function showToast(msg, duration = 2000) {
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(toastEl._toastTimeout);
+            toastEl._toastTimeout = setTimeout(() => toastEl.classList.remove('show'), duration);
+        }
+        function pickRandomShops(count) { return [...SHOP_POOL].sort(() => Math.random() - 0.5).slice(0, count); }
+        function randomMinutes(min = 5, max = 10) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+        function updateOrdersBadge() {
+            const active = orders.filter(o => o.status !== 'delivered' && o.status !== 'refunded').length;
+            ordersBadge.style.display = active === 0 ? 'none' : 'flex';
+            ordersBadge.textContent = active;
+        }
+        function updateCartBadge() {
+            cartBadge.style.display = cart.length === 0 ? 'none' : 'flex';
+            cartBadge.textContent = cart.length;
+        }
+        function generateDeliveryFee() {
+            if (Math.random() < 0.5) return 0;
+            return Math.floor(Math.random() * 51);
+        }
+        function generateDiscount() {
+            if (Math.random() < 0.6) return 0;
+            return Math.floor(Math.random() * 51);
+        }
+
+        function applyPrefs() {
+            if (prefs.darkMode) { document.body.classList.add('dark-mode'); app.classList.add('dark-mode'); }
+            else { document.body.classList.remove('dark-mode'); app.classList.remove('dark-mode'); }
+            if (prefs.largeFont) app.classList.add('large-font');
+            else app.classList.remove('large-font');
+            if (prefs.highContrast) document.documentElement.style.filter = 'contrast(1.3)';
+            else document.documentElement.style.filter = '';
+            if (prefs.reduceMotion) document.querySelectorAll('*').forEach(el => el.style.transition = 'none');
+            else document.querySelectorAll('*').forEach(el => el.style.transition = '');
+        }
+
+        // ---------- 店铺渲染 ----------
+        function refreshShops() {
+            currentShops = pickRandomShops(30);
+            renderShopGrid();
+            showShopList();
+        }
+
+        function renderShopGrid() {
+            if (!currentShops.length) {
+                shopGridContainer.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 0;color:#999;">暂无店铺</div>`;
+                return;
+            }
+            let html = '';
+            currentShops.forEach((shop, shopIndex) => {
+                const sales = Math.floor(Math.random() * 800 + 100);
+                html += `
+                    <div class="shop-card" data-shop-index="${shopIndex}">
+                        <div class="shop-cover">
+                            ${shop.emoji}
+                            <span class="shop-badge" style="${prefs.showRating ? '' : 'display:none;'}">★ ${shop.rating}</span>
+                        </div>
+                        <div class="shop-body">
+                            <div class="shop-name">${shop.name}</div>
+                            <div class="shop-meta" style="${prefs.showSales ? '' : 'display:none;'}"><span>月售${sales}</span></div>
+                            <div class="shop-tags">${shop.tags.slice(0,2).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+                            <div class="shop-price">起送 ¥${Math.min(...shop.dishes.map(d => d.price))}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            shopGridContainer.innerHTML = html;
+            document.querySelectorAll('.shop-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const idx = parseInt(card.dataset.shopIndex);
+                    openShopDetail(currentShops[idx], idx);
+                });
+            });
+        }
+
+        function openShopDetail(shop, shopIndex) {
+            currentDetailShop = { ...shop, shopIndex };
+            dishQuantities.clear();
+            renderShopDetail(shop, shopIndex);
+            shopGridContainer.style.display = 'none';
+            shopDetailContainer.classList.add('active');
+            footerBar.style.display = 'none';
+            cartPanel.classList.remove('active');
+            mainScrollArea.scrollTop = 0;
+        }
+
+        function showShopList() {
+            currentDetailShop = null;
+            dishQuantities.clear();
+            shopGridContainer.style.display = 'grid';
+            shopDetailContainer.classList.remove('active');
+            shopDetailContainer.innerHTML = '';
+            footerBar.style.display = 'flex';
+            cartPanel.classList.remove('active');
+        }
+
+        function renderShopDetail(shop, shopIndex) {
+            let dishesHtml = '';
+            shop.dishes.forEach((dish, dishIndex) => {
+                const key = `${shopIndex}-${dishIndex}`;
+                const qty = dishQuantities.get(key) || 0;
+                const isSelected = qty > 0;
+                dishesHtml += `
+                    <div class="detail-dish-item ${isSelected ? 'selected' : ''}">
+                        <div class="detail-dish-info">
+                            <span class="detail-dish-name">${dish.name}</span>
+                            <span class="detail-dish-desc">${dish.desc}</span>
+                        </div>
+                        <span class="detail-dish-price">¥${dish.price}</span>
+                        <div class="qty-control">
+                            <button class="qty-btn minus" data-dish-index="${dishIndex}" ${qty === 0 ? 'disabled' : ''}>−</button>
+                            <span class="qty-number">${qty}</span>
+                            <button class="qty-btn plus" data-dish-index="${dishIndex}">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            let totalQty = 0;
+            let totalPrice = 0;
+            dishQuantities.forEach((qty, key) => {
+                const [sIdx, dIdx] = key.split('-').map(Number);
+                if (sIdx === shopIndex) {
+                    totalQty += qty;
+                    totalPrice += qty * currentShops[sIdx].dishes[dIdx].price;
+                }
+            });
+
+            const html = `
+                <div class="detail-header">
+                    <button class="back-btn" id="backToListBtn">←</button>
+                    <span class="detail-shop-name">${shop.emoji} ${shop.name}</span>
+                    <span class="detail-rating">★ ${shop.rating}</span>
+                </div>
+                <div class="detail-menu" id="detailMenu">${dishesHtml}</div>
+                <div class="detail-bottom-bar">
+                    <div class="detail-bottom-total">
+                        已选 <span id="selectedCount">${totalQty}</span> 份
+                        <span class="price">¥<span id="selectedTotal">${totalPrice}</span></span>
+                    </div>
+                    <div class="detail-bottom-actions">
+                        <button class="btn btn-secondary" id="cancelSelectionBtn">清空</button>
+                        <button class="btn-cart" id="addToCartBtn">加入购物车</button>
+                        <button class="btn btn-primary" id="payNowBtn">立即支付</button>
+                    </div>
+                </div>
+            `;
+            shopDetailContainer.innerHTML = html;
+
+            document.getElementById('backToListBtn').addEventListener('click', showShopList);
+
+            document.querySelectorAll('.qty-btn.minus').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dishIndex = parseInt(btn.dataset.dishIndex);
+                    const key = `${shopIndex}-${dishIndex}`;
+                    const current = dishQuantities.get(key) || 0;
+                    if (current <= 1) dishQuantities.delete(key);
+                    else dishQuantities.set(key, current - 1);
+                    renderShopDetail(shop, shopIndex);
+                });
+            });
+
+            document.querySelectorAll('.qty-btn.plus').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const dishIndex = parseInt(btn.dataset.dishIndex);
+                    const key = `${shopIndex}-${dishIndex}`;
+                    const current = dishQuantities.get(key) || 0;
+                    dishQuantities.set(key, current + 1);
+                    renderShopDetail(shop, shopIndex);
+                });
+            });
+
+            document.getElementById('cancelSelectionBtn').addEventListener('click', () => {
+                dishQuantities.clear();
+                renderShopDetail(shop, shopIndex);
+            });
+
+            document.getElementById('addToCartBtn').addEventListener('click', () => {
+                if (dishQuantities.size === 0) { showToast('请先选择菜品'); return; }
+                dishQuantities.forEach((qty, key) => {
+                    const [sIdx, dIdx] = key.split('-').map(Number);
+                    if (sIdx === shopIndex) {
+                        const s = currentShops[sIdx];
+                        for (let i = 0; i < qty; i++) {
+                            cart.push({ shopName: s.name, dishName: s.dishes[dIdx].name, price: s.dishes[dIdx].price });
+                        }
+                    }
+                });
+                dishQuantities.clear();
+                renderShopDetail(shop, shopIndex);
+                updateCartBadge();
+                showToast('已加入购物车');
+            });
+
+            document.getElementById('payNowBtn').addEventListener('click', () => {
+                if (dishQuantities.size === 0) { showToast('请先选择菜品'); return; }
+                if (!user.registered) { showToast('请先登录或注册'); openAccountOptionsModal(); return; }
+                openPaymentMethodModal(shop, shopIndex);
+            });
+        }
+
+        // ---------- 支付 ----------
+        function openPaymentMethodModal(shop, shopIndex) {
+            const selectedItems = [];
+            dishQuantities.forEach((qty, key) => {
+                const [sIdx, dIdx] = key.split('-').map(Number);
+                if (sIdx === shopIndex) {
+                    const dish = currentShops[sIdx].dishes[dIdx];
+                    for (let i = 0; i < qty; i++) {
+                        selectedItems.push({ name: dish.name, price: dish.price });
+                    }
+                }
+            });
+            const subtotal = selectedItems.reduce((s, i) => s + i.price, 0);
+            const deliveryFee = generateDeliveryFee();
+            const discount = generateDiscount();
+            const total = Math.max(0, subtotal + deliveryFee - discount);
+
+            window._pendingOrder = { shop, shopIndex, selectedItems, subtotal, deliveryFee, discount, total };
+
+            const html = `
+                <div class="modal-title">选择支付方式</div>
+                <div class="modal-sub" style="display:flex;flex-direction:column;gap:6px;align-items:center;">
+                    <span style="font-size:13px;color:#888;">${shop.name} · ${selectedItems.length}件</span>
+                    <div style="font-size:13px;color:#666;text-align:left;width:100%;padding:8px 12px;background:#f8f9fa;border-radius:10px;margin-top:8px;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>菜品小计</span><span>¥${subtotal}</span></div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>配送费</span><span style="color:${deliveryFee > 0 ? '#ff4d00' : '#2b9939'}">${deliveryFee > 0 ? '+ ¥' + deliveryFee : '免配送费'}</span></div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>随机优惠</span><span style="color:${discount > 0 ? '#2b9939' : '#888'}">${discount > 0 ? '- ¥' + discount : '无优惠'}</span></div>
+                        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid #e0e0e0;font-weight:700;font-size:15px;"><span>合计</span><span style="color:#ff4d00;">¥${total}</span></div>
+                    </div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px;">
+                    <button class="btn btn-wechat" id="payWechatBtn" style="padding:14px 20px;">💬 微信支付</button>
+                    <button class="btn btn-alipay" id="payAlipayBtn" style="padding:14px 20px;">💰 支付宝</button>
+                </div>
+                <div class="modal-actions" style="margin-top:10px;">
+                    <button class="btn btn-secondary" id="cancelPayBtn">取消</button>
+                </div>
+            `;
+            openModal(html);
+            document.getElementById('cancelPayBtn').addEventListener('click', closeModal);
+            document.getElementById('payWechatBtn').addEventListener('click', () => openPasswordModal('wechat'));
+            document.getElementById('payAlipayBtn').addEventListener('click', () => openPasswordModal('alipay'));
+        }
+
+        function openPasswordModal(type) {
+            const pending = window._pendingOrder;
+            if (!pending) { closeModal(); return; }
+            const isWechat = type === 'wechat';
+            const payName = isWechat ? '微信支付' : '支付宝';
+            const correctPwd = isWechat ? user.wechatPassword : user.alipayPassword;
+
+            const html = `
+                <div class="modal-title prevent-close">🔒 输入支付密码</div>
+                <div class="modal-sub prevent-close">${payName} · 合计 ¥${pending.total}</div>
+                <div class="input-group prevent-close">
+                    <input type="password" class="modal-input" id="payPasswordInput" placeholder="6位数字密码" maxlength="6" inputmode="numeric">
+                    <div class="password-hint" id="pwdHint"></div>
+                </div>
+                <div class="modal-actions prevent-close">
+                    <button class="btn btn-secondary" id="cancelPwdBtn">取消</button>
+                    <button class="btn btn-primary" id="confirmPwdBtn">确认支付</button>
+                </div>
+            `;
+            openModal(html);
+            const pwdInput = document.getElementById('payPasswordInput');
+            const pwdHint = document.getElementById('pwdHint');
+
+            document.getElementById('cancelPwdBtn').addEventListener('click', closeModal);
+            document.getElementById('confirmPwdBtn').addEventListener('click', () => {
+                if (pwdInput.value.trim() === correctPwd) {
+                    createOrder(pending, payName);
+                } else {
+                    pwdHint.textContent = '密码错误，请重试';
+                    pwdInput.value = '';
+                    pwdInput.focus();
+                }
+            });
+            setTimeout(() => pwdInput.focus(), 100);
+        }
+
+        function createOrder(pending, payName) {
+            const now = Date.now();
+            const shipMinutes = randomMinutes(5, 10);
+            const deliverMinutes = randomMinutes(5, 10);
+            const order = {
+                id: 'ORD' + now,
+                shopName: pending.shop.name,
+                shopEmoji: pending.shop.emoji,
+                items: pending.selectedItems,
+                subtotal: pending.subtotal,
+                deliveryFee: pending.deliveryFee,
+                discount: pending.discount,
+                total: pending.total,
+                status: 'pending',
+                riderAccepted: false,
+                createdAt: now,
+                shipTime: now + shipMinutes * 60 * 1000,
+                riderAcceptTime: now + (shipMinutes - 2) * 60 * 1000,
+                deliverTime: now + (shipMinutes + deliverMinutes) * 60 * 1000,
+                shipMinutes: shipMinutes,
+                deliverMinutes: deliverMinutes,
+                merchantBoost: 0,
+                riderBoost: 0
+            };
+            orders.push(order);
+            dishQuantities.clear();
+            updateOrdersBadge();
+            closeModal();
+            window._pendingOrder = null;
+            showToast(`✅ 支付成功 ¥${pending.total} (${payName})`, 2000);
+            showShopList();
+            setTimeout(() => showOrderTrackingModal(order.id), 600);
+        }
+
+        // ---------- 订单跟踪 ----------
+        function showOrderTrackingModal(orderId) {
+            const order = orders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const now = Date.now();
+            const shipTime = order.shipTime - order.merchantBoost * 60 * 1000;
+            const riderAcceptTime = order.riderAcceptTime - order.riderBoost * 60 * 1000;
+            const deliverTime = order.deliverTime - order.merchantBoost * 60 * 1000 - order.riderBoost * 60 * 1000;
+
+            const isRiderAccepted = now >= riderAcceptTime;
+            const isShipped = now >= shipTime;
+            const isDelivered = now >= deliverTime;
+            const isRefunded = order.status === 'refunded';
+
+            let progressPercent = 0;
+            if (isDelivered) progressPercent = 100;
+            else if (isShipped) progressPercent = 66;
+            else if (isRiderAccepted) progressPercent = 33;
+            else progressPercent = 10;
+
+            let merchantStatusText = '', riderStatusText = '';
+            if (isRefunded) { merchantStatusText = '❌ 订单已退货'; riderStatusText = '❌ 订单已退货'; }
+            else if (isDelivered) { merchantStatusText = '✅ 商家已完成出餐'; riderStatusText = '✅ 骑手已送达'; }
+            else if (isShipped) { merchantStatusText = '✅ 商家已出餐'; riderStatusText = '🛵 骑手配送中'; }
+            else if (isRiderAccepted) { merchantStatusText = '🍳 商家备餐中'; riderStatusText = '🛵 骑手已接单，赶往商家'; }
+            else { merchantStatusText = '🍳 商家备餐中'; riderStatusText = '⏳ 等待骑手接单'; }
+
+            const formatTime = (ts) => {
+                if (!ts) return '--:--';
+                const d = new Date(ts);
+                return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            };
+
+            let remainText = '';
+            if (isRefunded) remainText = '订单已退货';
+            else if (isDelivered) remainText = '已送达';
+            else {
+                const remainMs = deliverTime - now;
+                const remainMin = Math.ceil(remainMs / 60000);
+                remainText = `总共再过 ${remainMin} 分钟到达`;
+            }
+
+            let refundBtnHtml = '';
+            if (!isRefunded && !isDelivered) {
+                if (!isShipped) {
+                    refundBtnHtml = `<button class="btn btn-refund" id="refundBtn" style="width:100%;margin-top:12px;">🔙 商家退货（未发货）</button>`;
+                } else if (isShipped && !isDelivered) {
+                    refundBtnHtml = `<button class="btn btn-refund" id="refundBtn" style="width:100%;margin-top:12px;">🔙 退货骑手（已接单）</button>`;
+                }
+            }
+
+            const html = `
+                <div class="modal-title">📦 订单跟踪</div>
+                <div class="modal-sub" style="display:flex;flex-direction:column;gap:4px;align-items:center;">
+                    <span style="font-size:14px;color:#222;font-weight:600;">${order.shopEmoji} ${order.shopName}</span>
+                    <span style="font-size:12px;color:#888;">订单号: ${order.id.slice(-8)}</span>
+                    <span style="font-size:14px;color:${isRefunded ? '#c62828' : '#ff4d00'};font-weight:700;margin-top:6px;">${remainText}</span>
+                </div>
+
+                <div class="progress-track">
+                    <div class="progress-fill" style="width: ${progressPercent}%;"></div>
+                    <div class="progress-step">
+                        <div class="step-icon ${isRefunded ? '' : (isRiderAccepted || isShipped || isDelivered ? 'done' : 'active')}">${isRefunded ? '✕' : (isShipped || isDelivered ? '✓' : '🍳')}</div>
+                        <span class="step-label ${isRefunded ? '' : (isShipped || isDelivered ? 'done' : 'active')}">商家接单</span>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-icon ${isRefunded ? '' : (isDelivered ? 'done' : (isShipped ? 'active' : ''))}">${isRefunded ? '✕' : (isDelivered ? '✓' : (isShipped ? '🛵' : '⏳'))}</div>
+                        <span class="step-label ${isRefunded ? '' : (isDelivered ? 'done' : (isShipped ? 'active' : ''))}">骑手取餐</span>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-icon ${isRefunded ? '' : (isDelivered ? 'done' : '')}">${isRefunded ? '✕' : (isDelivered ? '✓' : '🏠')}</div>
+                        <span class="step-label ${isRefunded ? '' : (isDelivered ? 'done' : '')}">送达</span>
+                    </div>
+                </div>
+
+                <div class="track-section">
+                    <div class="track-title">📋 商家状态</div>
+                    <div class="track-status-text">${merchantStatusText}</div>
+                    <div class="track-time">
+                        预计出餐时间: ${formatTime(shipTime)}
+                        ${order.merchantBoost > 0 ? ` · 已加速 ${order.merchantBoost} 分钟` : ''}
+                    </div>
+                </div>
+
+                <div class="track-section">
+                    <div class="track-title">🛵 骑手状态</div>
+                    <div class="track-status-text">${riderStatusText}</div>
+                    <div class="track-time">
+                        ${isRiderAccepted ? '骑手已接单 · ' : ''}预计送达时间: ${formatTime(deliverTime)}
+                        ${order.riderBoost > 0 ? ` · 已加速 ${order.riderBoost} 分钟` : ''}
+                    </div>
+                </div>
+
+                <div class="track-section">
+                    <div class="track-title">💰 费用明细</div>
+                    <div style="font-size:12px;color:#666;line-height:1.8;">
+                        <div style="display:flex;justify-content:space-between;"><span>菜品小计</span><span>¥${order.subtotal}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>配送费</span><span style="color:${order.deliveryFee > 0 ? '#ff4d00' : '#2b9939'}">${order.deliveryFee > 0 ? '+ ¥' + order.deliveryFee : '免配送费'}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>随机优惠</span><span style="color:${order.discount > 0 ? '#2b9939' : '#888'}">${order.discount > 0 ? '- ¥' + order.discount : '无优惠'}</span></div>
+                        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid #f0f0f0;margin-top:4px;font-weight:700;"><span>合计</span><span style="color:#ff4d00;">¥${order.total}</span></div>
+                    </div>
+                </div>
+
+                ${!isRefunded && !isDelivered ? `
+                <div class="track-section" style="background:#fff8e6;border-color:#ffe082;">
+                    <div class="track-title">⚡ 加速打赏</div>
+                    <div style="font-size:12px;color:#888;margin-bottom:10px;">1 元加速 1 分钟</div>
+                    <div class="tip-options">
+                        <div class="tip-option" data-target="merchant">
+                            <span class="icon">🏪</span>
+                            <span class="label">给商家加速</span>
+                        </div>
+                        <div class="tip-option" data-target="rider">
+                            <span class="icon">🛵</span>
+                            <span class="label">给骑手加速</span>
+                        </div>
+                    </div>
+                    <div id="tipAmountArea" style="display:none;">
+                        <div class="input-group">
+                            <label class="input-label">打赏金额（元）</label>
+                            <input type="number" class="modal-input" id="tipAmountInput" placeholder="自由输入金额" min="1" max="9999" step="1" value="1">
+                            <div class="password-hint" id="tipHint" style="color:#2b9939;"></div>
+                        </div>
+                        <button class="btn btn-primary" id="confirmTipBtn" style="width:100%;">确认打赏</button>
+                    </div>
+                </div>
+                ` : ''}
+
+                ${refundBtnHtml}
+
+                <div class="modal-actions">
+                    <button class="btn btn-primary" id="closeTrackBtn">知道了</button>
+                </div>
+            `;
+            openModal(html);
+
+            document.getElementById('closeTrackBtn').addEventListener('click', closeModal);
+
+            document.getElementById('refundBtn')?.addEventListener('click', () => {
+                if (isDelivered || isRefunded) return;
+                let refundTarget = '';
+                if (!isShipped) refundTarget = '商家';
+                else if (isShipped && !isDelivered) refundTarget = '骑手';
+                if (confirm(`确定要退货给${refundTarget}吗？`)) {
+                    order.status = 'refunded';
+                    updateOrdersBadge();
+                    closeModal();
+                    showToast(`✅ 已成功退货给${refundTarget}`, 2000);
+                    setTimeout(() => showOrderTrackingModal(order.id), 300);
+                }
+            });
+
+            let tipTarget = null;
+            const tipOptions = document.querySelectorAll('.tip-option');
+            const tipAmountArea = document.getElementById('tipAmountArea');
+            const tipAmountInput = document.getElementById('tipAmountInput');
+            const tipHint = document.getElementById('tipHint');
+
+            tipOptions.forEach(opt => {
+                opt.addEventListener('click', () => {
+                    tipOptions.forEach(o => o.classList.remove('active'));
+                    opt.classList.add('active');
+                    tipTarget = opt.dataset.target;
+                    tipAmountArea.style.display = 'block';
+                    updateTipHint();
+                });
+            });
+
+            function updateTipHint() {
+                const amount = parseInt(tipAmountInput.value) || 0;
+                tipHint.textContent = `可加速 ${amount} 分钟`;
+            }
+
+            if (tipAmountInput) {
+                tipAmountInput.addEventListener('input', updateTipHint);
+            }
+
+            document.getElementById('confirmTipBtn')?.addEventListener('click', () => {
+                if (!tipTarget) { showToast('请选择加速目标'); return; }
+                const amount = parseInt(tipAmountInput.value) || 0;
+                if (amount <= 0) { showToast('请输入有效金额'); return; }
+                if (tipTarget === 'merchant') {
+                    order.merchantBoost += amount;
+                    showToast(`已给商家加速 ${amount} 分钟`);
+                } else {
+                    order.riderBoost += amount;
+                    showToast(`已给骑手加速 ${amount} 分钟`);
+                }
+                closeModal();
+                setTimeout(() => showOrderTrackingModal(order.id), 200);
+            });
+        }
+
+        // ---------- 订单列表 ----------
+        function showOrdersList() {
+            if (orders.length === 0) {
+                const html = `
+                    <div class="modal-title">📋 我的订单</div>
+                    <div class="empty-orders">暂无订单</div>
+                    <div class="modal-actions"><button class="btn btn-primary" id="closeOrdersBtn">关闭</button></div>
+                `;
+                openModal(html);
+                document.getElementById('closeOrdersBtn').addEventListener('click', closeModal);
+                return;
+            }
+            let html = `<div class="modal-title">📋 我的订单</div><div style="max-height:55vh;overflow-y:auto;">`;
+            orders.slice().reverse().forEach(order => {
+                const now = Date.now();
+                const deliverTime = order.deliverTime - order.merchantBoost * 60 * 1000 - order.riderBoost * 60 * 1000;
+                const isDelivered = now >= deliverTime;
+                const isShipped = now >= (order.shipTime - order.merchantBoost * 60 * 1000);
+                const isRefunded = order.status === 'refunded';
+                let statusText, statusClass;
+                if (isRefunded) { statusText = '已退货'; statusClass = 'refunded'; }
+                else if (isDelivered) { statusText = '已送达'; statusClass = 'delivered'; }
+                else if (isShipped) { statusText = '已发货'; statusClass = 'shipped'; }
+                else { statusText = '未发货'; statusClass = 'pending'; }
+
+                let remainText = '';
+                if (isRefunded) remainText = '已退货';
+                else if (isDelivered) remainText = '已送达';
+                else {
+                    const remainMin = Math.ceil((deliverTime - now) / 60000);
+                    remainText = `再过 ${remainMin} 分钟到达`;
+                }
+
+                html += `
+                    <div class="order-item" data-order-id="${order.id}">
+                        <div class="order-shop"><span>${order.shopEmoji} ${order.shopName}</span><span class="order-total">¥${order.total}</span></div>
+                        <div class="order-dishes">${order.items.map(i => i.name).join('、')}</div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span class="status-badge ${statusClass}">${statusText} · ${remainText}</span>
+                            <button class="footer-btn" style="padding:4px 12px;font-size:12px;" onclick="event.stopPropagation();window.showOrderTracking('${order.id}')">查看详情</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div><div class="modal-actions"><button class="btn btn-primary" id="closeOrdersBtn">关闭</button></div>`;
+            openModal(html);
+            document.getElementById('closeOrdersBtn').addEventListener('click', closeModal);
+        }
+        window.showOrderTracking = function(orderId) { showOrderTrackingModal(orderId); };
+
+        // ---------- 设置 ----------
+        function openSettingsModal() {
+            if (!user.registered) { openAccountOptionsModal(); return; }
+            const html = `
+                <div class="modal-title">⚙️ 设置</div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">账号与安全</div>
+                    <div class="input-group">
+                        <label class="input-label">用户名</label>
+                        <input type="text" class="modal-input" id="settingsUsername" value="${user.username}" disabled>
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">微信支付密码（6位数字）</label>
+                        <input type="password" class="modal-input" id="settingsWechatPwd" value="${user.wechatPassword}" maxlength="6" inputmode="numeric">
+                    </div>
+                    <div class="input-group">
+                        <label class="input-label">支付宝支付密码（6位数字）</label>
+                        <input type="password" class="modal-input" id="settingsAlipayPwd" value="${user.alipayPassword}" maxlength="6" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">显示与外观</div>
+                    <div style="margin-bottom:12px;">
+                        <label class="input-label" style="margin-bottom:8px;">📱 屏幕方向</label>
+                        <div class="orientation-options">
+                            <div class="orientation-option active" data-orientation="portrait">
+                                <span class="icon">📱</span>
+                                <span class="label">竖屏</span>
+                            </div>
+                            <div class="orientation-option" data-orientation="landscape">
+                                <span class="icon">🖥️</span>
+                                <span class="label">横屏</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">🌙 深色模式</div><div class="setting-row-desc">切换深色主题</div></div>
+                        <div class="switch ${prefs.darkMode ? 'on' : ''}" id="darkModeSwitch"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">🔠 大字体模式</div><div class="setting-row-desc">放大文字更易读</div></div>
+                        <div class="switch ${prefs.largeFont ? 'on' : ''}" id="largeFontSwitch"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">🌈 高对比度</div><div class="setting-row-desc">提升文字与背景对比</div></div>
+                        <div class="switch ${prefs.highContrast ? 'on' : ''}" id="highContrastSwitch"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">🎞️ 减少动画</div><div class="setting-row-desc">关闭过渡动画效果</div></div>
+                        <div class="switch ${prefs.reduceMotion ? 'on' : ''}" id="reduceMotionSwitch"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">⭐ 显示评分</div><div class="setting-row-desc">在店铺封面显示评分</div></div>
+                        <div class="switch ${prefs.showRating ? 'on' : ''}" id="showRatingSwitch"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">📊 显示月售</div><div class="setting-row-desc">显示店铺月售数量</div></div>
+                        <div class="switch ${prefs.showSales ? 'on' : ''}" id="showSalesSwitch"></div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">通知与提醒</div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">🔔 消息通知</div><div class="setting-row-desc">接收订单状态通知</div></div>
+                        <div class="switch ${prefs.notifications ? 'on' : ''}" id="notifySwitch"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">📳 震动提醒</div><div class="setting-row-desc">新订单时震动</div></div>
+                        <div class="switch ${prefs.vibration ? 'on' : ''}" id="vibrationSwitch"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">⏰ 订单提醒</div><div class="setting-row-desc">订单状态变化时提醒</div></div>
+                        <div class="switch ${prefs.orderReminder ? 'on' : ''}" id="orderReminderSwitch"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">🔊 音效</div><div class="setting-row-desc">操作提示音</div></div>
+                        <div class="switch ${prefs.sound ? 'on' : ''}" id="soundSwitch"></div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-section-title">隐私与数据</div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">📍 定位服务</div><div class="setting-row-desc">用于计算配送距离</div></div>
+                        <div class="switch ${prefs.locationService ? 'on' : ''}" id="locationSwitch"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">🤝 个性化推荐</div><div class="setting-row-desc">根据口味推荐店铺</div></div>
+                        <div class="switch ${prefs.personalizedRecommend ? 'on' : ''}" id="recommendSwitch"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">📤 共享位置</div><div class="setting-row-desc">允许骑手查看位置</div></div>
+                        <div class="switch ${prefs.shareLocation ? 'on' : ''}" id="shareLocationSwitch"></div>
+                    </div>
+                    <div class="setting-row">
+                        <div><div class="setting-row-label">💾 省流量模式</div><div class="setting-row-desc">减少图片加载</div></div>
+                        <div class="switch ${prefs.dataSaver ? 'on' : ''}" id="dataSaverSwitch"></div>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="cancelSettingsBtn">取消</button>
+                    <button class="btn btn-primary" id="saveSettingsBtn">保存</button>
+                </div>
+            `;
+            openModal(html);
+
+            document.querySelectorAll('.orientation-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    document.querySelectorAll('.orientation-option').forEach(o => o.classList.remove('active'));
+                    opt.classList.add('active');
+                    const orientation = opt.dataset.orientation;
+                    if (screen.orientation && screen.orientation.lock) {
+                        screen.orientation.lock(orientation).catch(() => {});
+                    }
+                    if (orientation === 'landscape') {
+                        document.documentElement.style.transform = 'rotate(90deg)';
+                        document.documentElement.style.transformOrigin = 'center center';
+                        document.documentElement.style.width = '100vh';
+                        document.documentElement.style.height = '100vw';
+                        document.documentElement.style.overflow = 'hidden';
+                        document.body.style.width = '100vh';
+                        document.body.style.height = '100vw';
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        document.documentElement.style.transform = '';
+                        document.documentElement.style.transformOrigin = '';
+                        document.documentElement.style.width = '';
+                        document.documentElement.style.height = '';
+                        document.documentElement.style.overflow = '';
+                        document.body.style.width = '';
+                        document.body.style.height = '';
+                        document.body.style.overflow = '';
+                    }
+                });
+            });
+
+            document.querySelectorAll('.switch').forEach(sw => {
+                sw.addEventListener('click', () => {
+                    sw.classList.toggle('on');
+                    const id = sw.id;
+                    const isOn = sw.classList.contains('on');
+                    if (id === 'darkModeSwitch') { prefs.darkMode = isOn; applyPrefs(); }
+                    if (id === 'largeFontSwitch') { prefs.largeFont = isOn; applyPrefs(); }
+                    if (id === 'highContrastSwitch') { prefs.highContrast = isOn; applyPrefs(); }
+                    if (id === 'reduceMotionSwitch') { prefs.reduceMotion = isOn; applyPrefs(); }
+                    if (id === 'showRatingSwitch') { prefs.showRating = isOn; renderShopGrid(); }
+                    if (id === 'showSalesSwitch') { prefs.showSales = isOn; renderShopGrid(); }
+                    if (id === 'notifySwitch') prefs.notifications = isOn;
+                    if (id === 'vibrationSwitch') prefs.vibration = isOn;
+                    if (id === 'orderReminderSwitch') prefs.orderReminder = isOn;
+                    if (id === 'soundSwitch') prefs.sound = isOn;
+                    if (id === 'locationSwitch') prefs.locationService = isOn;
+                    if (id === 'recommendSwitch') prefs.personalizedRecommend = isOn;
+                    if (id === 'shareLocationSwitch') prefs.shareLocation = isOn;
+                    if (id === 'dataSaverSwitch') prefs.dataSaver = isOn;
+                });
+            });
+
+            document.getElementById('cancelSettingsBtn').addEventListener('click', closeModal);
+            document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+                const wechatPwd = document.getElementById('settingsWechatPwd').value.trim();
+                const alipayPwd = document.getElementById('settingsAlipayPwd').value.trim();
+                if (wechatPwd && !/^\d{6}$/.test(wechatPwd)) { showToast('微信支付密码须为6位数字'); return; }
+                if (alipayPwd && !/^\d{6}$/.test(alipayPwd)) { showToast('支付宝支付密码须为6位数字'); return; }
+                if (wechatPwd) user.wechatPassword = wechatPwd;
+                if (alipayPwd) user.alipayPassword = alipayPwd;
+                if (userDatabase[user.username]) {
+                    userDatabase[user.username].wechatPassword = user.wechatPassword;
+                    userDatabase[user.username].alipayPassword = user.alipayPassword;
+                    saveUserDatabase();
+                }
+                applyPrefs();
+                closeModal();
+                showToast('设置已保存');
+            });
+        }
+
+        // ---------- 账号入口 ----------
+        function openAccountOptionsModal() {
+            const html = `
+                <div class="modal-title">模拟某团外卖</div>
+                <div class="modal-sub">请选择账号操作</div>
+                <div class="account-options">
+                    <div class="account-option" id="loginOption">
+                        <span class="icon">🔑</span>
+                        <div class="text">
+                            <div class="title">登录</div>
+                            <div class="desc">已有账号，只需输入用户名</div>
+                        </div>
+                    </div>
+                    <div class="account-option" id="registerOption">
+                        <span class="icon">✨</span>
+                        <div class="text">
+                            <div class="title">注册</div>
+                            <div class="desc">创建新账号，设置支付密码</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="cancelAccountBtn">取消</button>
+                </div>
+            `;
+            openModal(html);
+
+            document.getElementById('cancelAccountBtn').addEventListener('click', closeModal);
+            document.getElementById('loginOption').addEventListener('click', () => openLoginModal());
+            document.getElementById('registerOption').addEventListener('click', () => openRegisterModal());
+        }
+
+        // ---------- 注册 ----------
+        function openRegisterModal() {
+            const html = `
+                <div class="modal-title">注册新账号</div>
+                <div class="modal-sub">创建你的模拟某团外卖账号</div>
+                <div class="input-group">
+                    <label class="input-label">用户名</label>
+                    <input type="text" class="modal-input" id="regUsername" placeholder="例如: 吃货小明">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">微信支付密码 (6位数字)</label>
+                    <input type="password" class="modal-input" id="regWechatPwd" placeholder="请设置6位数字密码" maxlength="6" inputmode="numeric">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">支付宝支付密码 (6位数字)</label>
+                    <input type="password" class="modal-input" id="regAlipayPwd" placeholder="请设置6位数字密码" maxlength="6" inputmode="numeric">
+                </div>
+                <div class="error-hint" id="regError"></div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="cancelRegBtn">取消</button>
+                    <button class="btn btn-primary" id="confirmRegBtn">注册</button>
+                </div>
+                <div style="text-align:center;margin-top:12px;">
+                    <button class="btn-link" id="toLoginBtn">已有账号？去登录</button>
+                </div>
+            `;
+            openModal(html);
+
+            document.getElementById('cancelRegBtn').addEventListener('click', closeModal);
+            document.getElementById('toLoginBtn').addEventListener('click', () => openLoginModal());
+            document.getElementById('confirmRegBtn').addEventListener('click', () => {
+                const username = document.getElementById('regUsername').value.trim();
+                const wechatPwd = document.getElementById('regWechatPwd').value.trim();
+                const alipayPwd = document.getElementById('regAlipayPwd').value.trim();
+                const errorEl = document.getElementById('regError');
+                if (!username) { errorEl.textContent = '请输入用户名'; return; }
+                if (!wechatPwd || !/^\d{6}$/.test(wechatPwd)) { errorEl.textContent = '请设置6位数字微信支付密码'; return; }
+                if (!alipayPwd || !/^\d{6}$/.test(alipayPwd)) { errorEl.textContent = '请设置6位数字支付宝支付密码'; return; }
+                if (userDatabase[username]) { errorEl.textContent = '用户名已存在，请直接登录'; return; }
+                userDatabase[username] = { wechatPassword: wechatPwd, alipayPassword: alipayPwd };
+                saveUserDatabase();
+                user.registered = true;
+                user.username = username;
+                user.wechatPassword = wechatPwd;
+                user.alipayPassword = alipayPwd;
+                userNameDisplay.textContent = username;
+                userNameDisplay.classList.remove('not-logged');
+                closeModal();
+                showToast('注册成功！已自动登录');
+            });
+        }
+
+        // ---------- 登录 ----------
+        function openLoginModal() {
+            const html = `
+                <div class="modal-title">登录账号</div>
+                <div class="modal-sub">只需输入用户名即可登录</div>
+                <div class="input-group">
+                    <label class="input-label">用户名</label>
+                    <input type="text" class="modal-input" id="loginUsername" placeholder="输入用户名">
+                </div>
+                <div class="error-hint" id="loginError"></div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="cancelLoginBtn">取消</button>
+                    <button class="btn btn-primary" id="confirmLoginBtn">登录</button>
+                </div>
+                <div style="text-align:center;margin-top:12px;">
+                    <button class="btn-link" id="toRegBtn">没有账号？去注册</button>
+                </div>
+            `;
+            openModal(html);
+
+            document.getElementById('cancelLoginBtn').addEventListener('click', closeModal);
+            document.getElementById('toRegBtn').addEventListener('click', () => openRegisterModal());
+            document.getElementById('confirmLoginBtn').addEventListener('click', () => {
+                const username = document.getElementById('loginUsername').value.trim();
+                const errorEl = document.getElementById('loginError');
+                if (!username) { errorEl.textContent = '请输入用户名'; return; }
+                const dbUser = userDatabase[username];
+                if (!dbUser) { errorEl.textContent = '用户不存在，请先注册'; return; }
+                user.registered = true;
+                user.username = username;
+                user.wechatPassword = dbUser.wechatPassword;
+                user.alipayPassword = dbUser.alipayPassword;
+                userNameDisplay.textContent = username;
+                userNameDisplay.classList.remove('not-logged');
+                closeModal();
+                showToast(`欢迎回来，${username}`);
+            });
+        }
+
+        // ---------- 模态框通用 ----------
+        function openModal(htmlContent) {
+            modalContent.innerHTML = htmlContent;
+            modalOverlay.classList.add('active');
+        }
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            modalContent.innerHTML = '';
+        }
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                if (!modalContent.querySelector('.prevent-close')) closeModal();
+            }
+        });
+
+        // ---------- 定时器 ----------
+        function startOrderUpdateTimer() {
+            if (orderUpdateInterval) clearInterval(orderUpdateInterval);
+            orderUpdateInterval = setInterval(() => {
+                const now = Date.now();
+                let changed = false;
+                orders.forEach(order => {
+                    if (order.status === 'refunded') return;
+                    if (!order.riderAccepted && now >= (order.riderAcceptTime - order.riderBoost * 60 * 1000)) {
+                        order.riderAccepted = true;
+                        changed = true;
+                    }
+                    if (order.status === 'pending' && now >= (order.shipTime - order.merchantBoost * 60 * 1000)) {
+                        order.status = 'shipped';
+                        changed = true;
+                    } else if (order.status === 'shipped' && now >= (order.deliverTime - order.merchantBoost * 60 * 1000 - order.riderBoost * 60 * 1000)) {
+                        order.status = 'delivered';
+                        changed = true;
+                    }
+                });
+                if (changed) updateOrdersBadge();
+            }, 5000);
+        }
+
+        // ---------- 初始化 ----------
+        function init() {
+            refreshShops();
+            startOrderUpdateTimer();
+            updateOrdersBadge();
+            updateCartBadge();
+            applyPrefs();
+
+            settingsBtn.addEventListener('click', () => {
+                if (user.registered) openSettingsModal();
+                else openAccountOptionsModal();
+            });
+            userNameDisplay.addEventListener('click', () => {
+                if (user.registered) openSettingsModal();
+                else openAccountOptionsModal();
+            });
+            ordersBtn.addEventListener('click', showOrdersList);
+
+            cartBtn.addEventListener('click', () => {
+                cartPanel.classList.toggle('active');
+                if (cartPanel.classList.contains('active')) renderCartPanel();
+            });
+        }
+
+        // ---------- 购物车面板 ----------
+        function renderCartPanel() {
+            if (cart.length === 0) {
+                cartPanel.innerHTML = `<div class="empty-cart">🛒 购物车是空的</div>`;
+                return;
+            }
+            let itemsHtml = '';
+            let total = 0;
+            cart.forEach((item, index) => {
+                total += item.price;
+                itemsHtml += `
+                    <div class="cart-item">
+                        <span class="cart-item-name">${item.dishName}</span>
+                        <span class="cart-item-shop">${item.shopName}</span>
+                        <span class="cart-item-price">¥${item.price}</span>
+                        <button class="cart-item-remove" data-index="${index}">✕</button>
+                    </div>
+                `;
+            });
+            cartPanel.innerHTML = `
+                <div style="font-weight:700;font-size:14px;margin-bottom:4px;">🛒 购物车</div>
+                ${itemsHtml}
+                <div class="cart-total"><span>合计</span><span class="cart-total-price">¥${total}</span></div>
+                <div class="cart-actions">
+                    <button class="cart-clear-btn" id="clearCartBtn">清空</button>
+                    <button class="cart-pay-btn" id="cartPayBtn">去支付</button>
+                </div>
+            `;
+            cartPanel.querySelectorAll('.cart-item-remove').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    cart.splice(parseInt(btn.dataset.index), 1);
+                    updateCartBadge();
+                    renderCartPanel();
+                });
+            });
+            document.getElementById('clearCartBtn').addEventListener('click', () => {
+                cart = [];
+                updateCartBadge();
+                renderCartPanel();
+                showToast('购物车已清空');
+            });
+            document.getElementById('cartPayBtn').addEventListener('click', () => {
+                if (cart.length === 0) return;
+                if (!user.registered) { showToast('请先登录或注册'); openAccountOptionsModal(); return; }
+                const items = cart.map(i => ({ name: i.dishName, price: i.price }));
+                const subtotal = cart.reduce((s, i) => s + i.price, 0);
+                const deliveryFee = generateDeliveryFee();
+                const discount = generateDiscount();
+                const total = Math.max(0, subtotal + deliveryFee - discount);
+                const now = Date.now();
+                const shipMinutes = randomMinutes(5, 10);
+                const deliverMinutes = randomMinutes(5, 10);
+                const shopNames = [...new Set(cart.map(i => i.shopName))].join('、');
+                orders.push({
+                    id: 'ORD' + now,
+                    shopName: shopNames,
+                    shopEmoji: '🛒',
+                    items: items,
+                    subtotal, deliveryFee, discount, total,
+                    status: 'pending',
+                    riderAccepted: false,
+                    createdAt: now,
+                    shipTime: now + shipMinutes * 60 * 1000,
+                    riderAcceptTime: now + (shipMinutes - 2) * 60 * 1000,
+                    deliverTime: now + (shipMinutes + deliverMinutes) * 60 * 1000,
+                    shipMinutes, deliverMinutes,
+                    merchantBoost: 0,
+                    riderBoost: 0
+                });
+                cart = [];
+                updateCartBadge();
+                renderCartPanel();
+                cartPanel.classList.remove('active');
+                updateOrdersBadge();
+                showToast(`✅ 购物车支付成功 ¥${total}`, 2000);
+            });
+        }
+
+        init();
+
+        window.addEventListener('beforeunload', () => {
+            if (orderUpdateInterval) clearInterval(orderUpdateInterval);
+        });
+    })();
+</script>
+</body>
+</html>
