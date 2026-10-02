@@ -274,7 +274,6 @@
 </head>
 <body>
 <div class="app" id="app">
-    <!-- 头部 -->
     <div class="header">
         <div class="logo-area">
             <div class="logo-icon">🍔</div>
@@ -285,16 +284,13 @@
         </div>
     </div>
 
-    <!-- 主滚动区 -->
     <div class="scroll-area" id="mainScrollArea">
         <div class="shop-grid" id="shopGridContainer"></div>
         <div class="shop-detail" id="shopDetailContainer"></div>
     </div>
 
-    <!-- 购物车面板 -->
     <div class="cart-panel" id="cartPanel"></div>
 
-    <!-- 底部固定栏 -->
     <div class="footer-bar" id="footerBar">
         <div class="footer-left">
             <button class="footer-btn" id="ordersBtn">📋 订单<span class="footer-badge" id="ordersBadge" style="display:none;">0</span></button>
@@ -305,10 +301,8 @@
         </div>
     </div>
 
-    <!-- Toast -->
     <div class="toast-message" id="toast">操作成功</div>
 
-    <!-- 模态框 -->
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-content" id="modalContent"></div>
     </div>
@@ -316,7 +310,6 @@
 
 <script>
     (function() {
-        // ---------- 全局状态 ----------
         let user = { registered: false, username: '', wechatPassword: '', alipayPassword: '' };
         let userDatabase = loadUserDatabase();
         let orders = [];
@@ -343,7 +336,6 @@
             shareLocation: false
         };
 
-        // ---------- localStorage 持久化 ----------
         function loadUserDatabase() {
             try {
                 const data = localStorage.getItem('mt_user_database');
@@ -357,7 +349,6 @@
             } catch (e) { console.warn('保存用户数据库失败', e); }
         }
 
-        // ---------- 店铺池 ----------
         const BASE_DISHES = ['脆皮炸鸡','香辣鸡腿堡','大薯条','奥尔良烤翅','可乐(大杯)','鸡米花','劲爆鸡排','芝士薯格','炸鸡全家桶','蜂蜜芥末鸡块','香辣鸡翅','玉米浓汤','韭菜猪肉饺','玉米鲜虾饺','凉拌黄瓜','酱牛肉','酸辣汤','白菜猪肉饺','三鲜水饺','牛肉水饺','素三鲜饺','酱猪蹄','拍黄瓜','小米粥','豚骨拉面','地狱辣拉面','煎饺(5只)','溏心蛋','叉烧饭','味噌拉面','酱油拉面','炸鸡块','海苔','玉米粒','叉烧(3片)','日式煎茶','珍珠奶茶','杨枝甘露','芝士葡萄','柠檬茶','芋泥波波','黑糖珍珠','草莓奶昔','芒果冰沙','抹茶拿铁','可可奶茶','椰果奶茶','布丁奶茶','经典冒菜','麻辣牛肉冒菜','冰粉','脑花','干碟','油碟','毛肚','黄喉','午餐肉','宽粉','豆皮','唯怡豆奶','鸡胸肉沙拉','牛油果沙拉','全麦三明治','南瓜浓汤','藜麦碗','考伯沙拉','凯撒沙拉','鸡胸肉卷','牛油果奶昔','果蔬汁','希腊酸奶','能量棒','酸菜猪肉饺','酱大骨','锅包肉','地三鲜','猪肉炖粉条','小鸡炖蘑菇','拔丝地瓜','酸菜白肉','大拉皮','粘豆包','玉米面粥','经典烤肉拌饭','辣白菜五花肉拌饭','海带汤','芝士年糕','烤牛肉拌饭','鸡肉拌饭','金枪鱼拌饭','泡菜汤','大酱汤','石锅拌饭','韩式炸酱面','经典黄焖鸡','黄焖排骨','黄焖猪蹄','加土豆','酸梅汤','黄焖牛肉','黄焖鸡腿','黄焖香菇','加金针菇','加豆皮','米饭','可乐','经典螺蛳粉','豪华螺蛳粉','干捞螺蛳粉','卤蛋','绿豆沙','螺蛳粉加鸭脚','螺蛳粉加猪脚','螺蛳粉加香肠','腐竹加量','酸笋加量','油果加量','豆奶','热干面','牛肉热干面','蛋酒','面窝','豆浆','牛杂热干面','虾仁热干面','炸酱热干面','糊米酒','豆腐脑','油条','绿豆汤','拌面','扁肉','炖罐','蒸饺','卤味拼盘','拌面加扁肉','炒粉','炒饭','瓦罐汤','花生汤'];
         const SHOP_NAMES = ['疯狂炸鸡社','妈妈水饺','深夜食堂·拉面','奶茶自由','川香冒菜','轻食主义','东北饺子王','烤肉拌饭','黄焖鸡米饭','柳州螺蛳粉','武汉热干面','沙县小吃','沙县小吃二店','兰州拉面','重庆小面','麻辣香锅','石锅拌饭','日式寿司','韩式炸鸡','广式烧腊','湖南米粉','桂林米粉','过桥米线','生煎包','小笼包','灌汤包','兰州牛肉面','西安肉夹馍','成都冒菜','云南米线'];
         const SHOP_EMOJIS = ['🍗','🥟','🍜','🧋','🌶️','🥗','🥟','🍚','🍗','🍜','🍝','🥟','🥟','🍜','🍝','🌶️','🍚','🍣','🍗','🍖','🍜','🍜','🍜','🥟','🥟','🥟','🍜','🥙','🌶️','🍜'];
@@ -378,7 +369,6 @@
             return { name, emoji: SHOP_EMOJIS[idx % SHOP_EMOJIS.length], rating: (4.0 + Math.random() * 1.0).toFixed(1), tags: ['美食','推荐','热销'].slice(0, 2 + Math.floor(Math.random() * 2)), dishes };
         });
 
-        // DOM
         const app = document.getElementById('app');
         const shopGridContainer = document.getElementById('shopGridContainer');
         const shopDetailContainer = document.getElementById('shopDetailContainer');
@@ -395,7 +385,6 @@
         const cartBadge = document.getElementById('cartBadge');
         const cartPanel = document.getElementById('cartPanel');
 
-        // ---------- 工具 ----------
         function showToast(msg, duration = 2000) {
             toastEl.textContent = msg;
             toastEl.classList.add('show');
@@ -433,7 +422,6 @@
             else document.querySelectorAll('*').forEach(el => el.style.transition = '');
         }
 
-        // ---------- 店铺渲染 ----------
         function refreshShops() {
             currentShops = pickRandomShops(30);
             renderShopGrid();
@@ -458,7 +446,7 @@
                             <div class="shop-name">${shop.name}</div>
                             <div class="shop-meta" style="${prefs.showSales ? '' : 'display:none;'}"><span>月售${sales}</span></div>
                             <div class="shop-tags">${shop.tags.slice(0,2).map(t => `<span class="tag">${t}</span>`).join('')}</div>
-                            <div class="shop-price">起送 ¥${Math.min(...shop.dishes.map(d => d.price))}</div>
+                            <div class="shop-price">起送 ${Math.min(...shop.dishes.map(d => d.price))} 块</div>
                         </div>
                     </div>
                 `;
@@ -505,7 +493,7 @@
                             <span class="detail-dish-name">${dish.name}</span>
                             <span class="detail-dish-desc">${dish.desc}</span>
                         </div>
-                        <span class="detail-dish-price">¥${dish.price}</span>
+                        <span class="detail-dish-price">${dish.price} 块</span>
                         <div class="qty-control">
                             <button class="qty-btn minus" data-dish-index="${dishIndex}" ${qty === 0 ? 'disabled' : ''}>−</button>
                             <span class="qty-number">${qty}</span>
@@ -535,7 +523,7 @@
                 <div class="detail-bottom-bar">
                     <div class="detail-bottom-total">
                         已选 <span id="selectedCount">${totalQty}</span> 份
-                        <span class="price">¥<span id="selectedTotal">${totalPrice}</span></span>
+                        <span class="price"><span id="selectedTotal">${totalPrice}</span> 块</span>
                     </div>
                     <div class="detail-bottom-actions">
                         <button class="btn btn-secondary" id="cancelSelectionBtn">清空</button>
@@ -600,7 +588,6 @@
             });
         }
 
-        // ---------- 支付 ----------
         function openPaymentMethodModal(shop, shopIndex) {
             const selectedItems = [];
             dishQuantities.forEach((qty, key) => {
@@ -624,10 +611,10 @@
                 <div class="modal-sub" style="display:flex;flex-direction:column;gap:6px;align-items:center;">
                     <span style="font-size:13px;color:#888;">${shop.name} · ${selectedItems.length}件</span>
                     <div style="font-size:13px;color:#666;text-align:left;width:100%;padding:8px 12px;background:#f8f9fa;border-radius:10px;margin-top:8px;">
-                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>菜品小计</span><span>¥${subtotal}</span></div>
-                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>配送费</span><span style="color:${deliveryFee > 0 ? '#ff4d00' : '#2b9939'}">${deliveryFee > 0 ? '+ ¥' + deliveryFee : '免配送费'}</span></div>
-                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>随机优惠</span><span style="color:${discount > 0 ? '#2b9939' : '#888'}">${discount > 0 ? '- ¥' + discount : '无优惠'}</span></div>
-                        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid #e0e0e0;font-weight:700;font-size:15px;"><span>合计</span><span style="color:#ff4d00;">¥${total}</span></div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>菜品小计</span><span>${subtotal} 块</span></div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>配送费</span><span style="color:${deliveryFee > 0 ? '#ff4d00' : '#2b9939'}">${deliveryFee > 0 ? '+ ' + deliveryFee + ' 块' : '免配送费'}</span></div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>随机优惠</span><span style="color:${discount > 0 ? '#2b9939' : '#888'}">${discount > 0 ? '- ' + discount + ' 块' : '无优惠'}</span></div>
+                        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid #e0e0e0;font-weight:700;font-size:15px;"><span>合计</span><span style="color:#ff4d00;">${total} 块</span></div>
                     </div>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px;">
@@ -653,7 +640,7 @@
 
             const html = `
                 <div class="modal-title prevent-close">🔒 输入支付密码</div>
-                <div class="modal-sub prevent-close">${payName} · 合计 ¥${pending.total}</div>
+                <div class="modal-sub prevent-close">${payName} · 合计 ${pending.total} 块</div>
                 <div class="input-group prevent-close">
                     <input type="password" class="modal-input" id="payPasswordInput" placeholder="6位数字密码" maxlength="6" inputmode="numeric">
                     <div class="password-hint" id="pwdHint"></div>
@@ -709,12 +696,11 @@
             updateOrdersBadge();
             closeModal();
             window._pendingOrder = null;
-            showToast(`✅ 支付成功 ¥${pending.total} (${payName})`, 2000);
+            showToast(`✅ 支付成功 ${pending.total} 块 (${payName})`, 2000);
             showShopList();
             setTimeout(() => showOrderTrackingModal(order.id), 600);
         }
 
-        // ---------- 订单跟踪 ----------
         function showOrderTrackingModal(orderId) {
             const order = orders.find(o => o.id === orderId);
             if (!order) return;
@@ -811,17 +797,17 @@
                 <div class="track-section">
                     <div class="track-title">💰 费用明细</div>
                     <div style="font-size:12px;color:#666;line-height:1.8;">
-                        <div style="display:flex;justify-content:space-between;"><span>菜品小计</span><span>¥${order.subtotal}</span></div>
-                        <div style="display:flex;justify-content:space-between;"><span>配送费</span><span style="color:${order.deliveryFee > 0 ? '#ff4d00' : '#2b9939'}">${order.deliveryFee > 0 ? '+ ¥' + order.deliveryFee : '免配送费'}</span></div>
-                        <div style="display:flex;justify-content:space-between;"><span>随机优惠</span><span style="color:${order.discount > 0 ? '#2b9939' : '#888'}">${order.discount > 0 ? '- ¥' + order.discount : '无优惠'}</span></div>
-                        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid #f0f0f0;margin-top:4px;font-weight:700;"><span>合计</span><span style="color:#ff4d00;">¥${order.total}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>菜品小计</span><span>${order.subtotal} 块</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>配送费</span><span style="color:${order.deliveryFee > 0 ? '#ff4d00' : '#2b9939'}">${order.deliveryFee > 0 ? '+ ' + order.deliveryFee + ' 块' : '免配送费'}</span></div>
+                        <div style="display:flex;justify-content:space-between;"><span>随机优惠</span><span style="color:${order.discount > 0 ? '#2b9939' : '#888'}">${order.discount > 0 ? '- ' + order.discount + ' 块' : '无优惠'}</span></div>
+                        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid #f0f0f0;margin-top:4px;font-weight:700;"><span>合计</span><span style="color:#ff4d00;">${order.total} 块</span></div>
                     </div>
                 </div>
 
                 ${!isRefunded && !isDelivered ? `
                 <div class="track-section" style="background:#fff8e6;border-color:#ffe082;">
                     <div class="track-title">⚡ 加速打赏</div>
-                    <div style="font-size:12px;color:#888;margin-bottom:10px;">1 元加速 1 分钟</div>
+                    <div style="font-size:12px;color:#888;margin-bottom:10px;">1 块加速 1 分钟</div>
                     <div class="tip-options">
                         <div class="tip-option" data-target="merchant">
                             <span class="icon">🏪</span>
@@ -834,7 +820,7 @@
                     </div>
                     <div id="tipAmountArea" style="display:none;">
                         <div class="input-group">
-                            <label class="input-label">打赏金额（元）</label>
+                            <label class="input-label">打赏金额</label>
                             <input type="number" class="modal-input" id="tipAmountInput" placeholder="自由输入金额" min="1" max="9999" step="1" value="1">
                             <div class="password-hint" id="tipHint" style="color:#2b9939;"></div>
                         </div>
@@ -908,7 +894,6 @@
             });
         }
 
-        // ---------- 订单列表 ----------
         function showOrdersList() {
             if (orders.length === 0) {
                 const html = `
@@ -943,7 +928,7 @@
 
                 html += `
                     <div class="order-item" data-order-id="${order.id}">
-                        <div class="order-shop"><span>${order.shopEmoji} ${order.shopName}</span><span class="order-total">¥${order.total}</span></div>
+                        <div class="order-shop"><span>${order.shopEmoji} ${order.shopName}</span><span class="order-total">${order.total} 块</span></div>
                         <div class="order-dishes">${order.items.map(i => i.name).join('、')}</div>
                         <div style="display:flex;justify-content:space-between;align-items:center;">
                             <span class="status-badge ${statusClass}">${statusText} · ${remainText}</span>
@@ -958,7 +943,6 @@
         }
         window.showOrderTracking = function(orderId) { showOrderTrackingModal(orderId); };
 
-        // ---------- 设置 ----------
         function openSettingsModal() {
             if (!user.registered) { openAccountOptionsModal(); return; }
             const html = `
@@ -1139,7 +1123,6 @@
             });
         }
 
-        // ---------- 账号入口 ----------
         function openAccountOptionsModal() {
             const html = `
                 <div class="modal-title">模拟某团外卖</div>
@@ -1171,7 +1154,6 @@
             document.getElementById('registerOption').addEventListener('click', () => openRegisterModal());
         }
 
-        // ---------- 注册 ----------
         function openRegisterModal() {
             const html = `
                 <div class="modal-title">注册新账号</div>
@@ -1223,7 +1205,6 @@
             });
         }
 
-        // ---------- 登录 ----------
         function openLoginModal() {
             const html = `
                 <div class="modal-title">登录账号</div>
@@ -1262,7 +1243,6 @@
             });
         }
 
-        // ---------- 模态框通用 ----------
         function openModal(htmlContent) {
             modalContent.innerHTML = htmlContent;
             modalOverlay.classList.add('active');
@@ -1277,7 +1257,6 @@
             }
         });
 
-        // ---------- 定时器 ----------
         function startOrderUpdateTimer() {
             if (orderUpdateInterval) clearInterval(orderUpdateInterval);
             orderUpdateInterval = setInterval(() => {
@@ -1301,7 +1280,6 @@
             }, 5000);
         }
 
-        // ---------- 初始化 ----------
         function init() {
             refreshShops();
             startOrderUpdateTimer();
@@ -1325,7 +1303,6 @@
             });
         }
 
-        // ---------- 购物车面板 ----------
         function renderCartPanel() {
             if (cart.length === 0) {
                 cartPanel.innerHTML = `<div class="empty-cart">🛒 购物车是空的</div>`;
@@ -1339,7 +1316,7 @@
                     <div class="cart-item">
                         <span class="cart-item-name">${item.dishName}</span>
                         <span class="cart-item-shop">${item.shopName}</span>
-                        <span class="cart-item-price">¥${item.price}</span>
+                        <span class="cart-item-price">${item.price} 块</span>
                         <button class="cart-item-remove" data-index="${index}">✕</button>
                     </div>
                 `;
@@ -1347,7 +1324,7 @@
             cartPanel.innerHTML = `
                 <div style="font-weight:700;font-size:14px;margin-bottom:4px;">🛒 购物车</div>
                 ${itemsHtml}
-                <div class="cart-total"><span>合计</span><span class="cart-total-price">¥${total}</span></div>
+                <div class="cart-total"><span>合计</span><span class="cart-total-price">${total} 块</span></div>
                 <div class="cart-actions">
                     <button class="cart-clear-btn" id="clearCartBtn">清空</button>
                     <button class="cart-pay-btn" id="cartPayBtn">去支付</button>
@@ -1399,7 +1376,7 @@
                 renderCartPanel();
                 cartPanel.classList.remove('active');
                 updateOrdersBadge();
-                showToast(`✅ 购物车支付成功 ¥${total}`, 2000);
+                showToast(`✅ 购物车支付成功 ${total} 块`, 2000);
             });
         }
 
